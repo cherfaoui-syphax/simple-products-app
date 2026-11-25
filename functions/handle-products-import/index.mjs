@@ -1,12 +1,13 @@
 export const handler = async (event) => {
-  console.log('Received event:', JSON.stringify(event, null, 2));
-  const { body } = event;
-  const { products } = JSON.parse(body);
-  console.log('Products to import:', JSON.stringify(products, null, 2));
+  // TODO implement
 
-  return {
+
+  console.log(JSON.stringify(event));
+
+  console.log(`CI CD is working`);
+  const response = {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: 'Handle products import function' }),
+    body: JSON.stringify('Hello from Lambda!'),
   };
+  return response;
 };
