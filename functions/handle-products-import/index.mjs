@@ -2,10 +2,11 @@ export const handler = async (event) => {
   // TODO implement
 
 
-  console.log(JSON.stringify(event));
+  console.log(`Event: ${JSON.stringify(event)}`);
 
   console.log(`CI CD is working`);
   console.log(`Hello from Lambda!`);
+
 
   console.log(`Event body: ${JSON.stringify(event.body)}` , typeof event.body);
 
