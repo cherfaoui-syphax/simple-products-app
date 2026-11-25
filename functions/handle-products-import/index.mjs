@@ -3,6 +3,7 @@ export const handler = async (event) => {
 
 
   console.log(`Event: ${JSON.stringify(event)}`);
+  console.log(`Method: ${event.httpMethod}`);
 
   console.log(`CI CD is working`);
   console.log(`Hello from Lambda!`);
