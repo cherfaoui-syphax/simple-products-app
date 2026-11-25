@@ -1,0 +1,17 @@
+{
+  "name": "products",
+  "version": "1.0.0",
+  "description": "Serverless function for products",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1177.0",
+    "@aws-sdk/client-s3": "^3.1177.0",
+    "@aws-sdk/lib-dynamodb": "^3.1177.0",
+    "@aws-sdk/s3-request-presigner": "^3.1177.0"
+  }
+}

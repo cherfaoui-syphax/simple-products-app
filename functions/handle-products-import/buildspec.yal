@@ -1,0 +1,32 @@
+version: 0.2
+
+env:
+  variables:
+    LAMBDA_NAME: handle-products-import
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+
+  build:
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/functions/handle-products-import"
+      - npm ci --omit=dev
+      - zip -r /tmp/function.zip index.mjs package.json node_modules
+
+  post_build:
+    commands:
+      - |
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" != "1" ]; then
+          exit 1
+        fi
+      - |
+        aws lambda update-function-code \
+          --function-name "$LAMBDA_NAME" \
+          --zip-file fileb:///tmp/function.zip \
+          --region eu-north-1
+      - |
+        aws lambda wait function-updated \
+          --function-name "$LAMBDA_NAME" \
+          --region eu-north-1
