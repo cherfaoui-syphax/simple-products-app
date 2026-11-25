@@ -3,7 +3,7 @@ export const handler = async (event) => {
   console.log('Received event:', JSON.stringify(event, null, 2));
   await new Promise((resolve) => setTimeout(resolve, 1000));
   console.log('Processing products...');
-
+  lastModified = new Date().toISOString();
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },
