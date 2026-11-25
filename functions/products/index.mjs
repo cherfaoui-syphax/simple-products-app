@@ -7,6 +7,7 @@ export const handler = async (event) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await new Promise((resolve) => setTimeout(resolve, 1000));
   console.log('Products processed successfully.');
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },
