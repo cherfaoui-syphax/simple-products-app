@@ -1,32 +1,94 @@
 version: 0.2
 
 env:
+  shell: bash
   variables:
     LAMBDA_NAME: handle-products-import
+    DEPLOY_REGION: eu-north-1
 
 phases:
   install:
     runtime-versions:
       nodejs: 22
 
+    commands:
+      - echo "Checking runtime versions"
+      - node --version
+      - npm --version
+      - aws --version
+
+  pre_build:
+    commands:
+      - echo "Checking AWS identity"
+      - aws sts get-caller-identity
+
+      - echo "Commit - $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo "Branch - $CODEBUILD_WEBHOOK_HEAD_REF"
+      - echo "Target Lambda - $LAMBDA_NAME"
+      - echo "Target region - $DEPLOY_REGION"
+
+      - echo "Checking Lambda access"
+      - |
+        aws lambda get-function-configuration \
+          --function-name "$LAMBDA_NAME" \
+          --region "$DEPLOY_REGION" \
+          --query '{Name:FunctionName,ARN:FunctionArn,State:State,Runtime:Runtime,LastUpdateStatus:LastUpdateStatus}' \
+          --no-cli-pager 2>&1
+
   build:
     commands:
+      - echo "Installing production dependencies"
       - cd "$CODEBUILD_SRC_DIR/functions/handle-products-import"
       - npm ci --omit=dev
-      - zip -r /tmp/function.zip index.mjs package.json node_modules
+
+      - echo "Creating deployment package"
+      - rm -f /tmp/function.zip
+      - zip -rq /tmp/function.zip index.mjs package.json node_modules
+
+      - echo "Checking deployment package"
+      - ls -lh /tmp/function.zip
+      - unzip -tq /tmp/function.zip
 
   post_build:
     commands:
       - |
         if [ "$CODEBUILD_BUILD_SUCCEEDING" != "1" ]; then
+          echo "Build failed. Deployment cancelled."
           exit 1
         fi
+
+      - echo "Deploying Lambda $LAMBDA_NAME"
+
       - |
         aws lambda update-function-code \
           --function-name "$LAMBDA_NAME" \
           --zip-file fileb:///tmp/function.zip \
-          --region eu-north-1
+          --region "$DEPLOY_REGION" \
+          --no-cli-pager \
+          > /tmp/deployment.log 2>&1 || {
+            echo "========== DEPLOYMENT ERROR =========="
+            cat /tmp/deployment.log
+            echo "======================================"
+            exit 1
+          }
+
+        cat /tmp/deployment.log
+
+      - echo "Waiting for Lambda deployment"
+
       - |
         aws lambda wait function-updated \
           --function-name "$LAMBDA_NAME" \
-          --region eu-north-1
+          --region "$DEPLOY_REGION" \
+          --no-cli-pager 2>&1
+
+      - echo "Verifying deployment"
+
+      - |
+        aws lambda get-function-configuration \
+          --function-name "$LAMBDA_NAME" \
+          --region "$DEPLOY_REGION" \
+          --query '{Name:FunctionName,LastModified:LastModified,State:State,LastUpdateStatus:LastUpdateStatus}' \
+          --no-cli-pager
+
+      - echo "Deployment completed successfully"
