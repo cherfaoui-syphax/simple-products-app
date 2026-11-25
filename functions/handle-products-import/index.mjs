@@ -6,6 +6,10 @@ export const handler = async (event) => {
 
   console.log(`CI CD is working`);
   console.log(`Hello from Lambda!`);
+
+  console.log(`Event body: ${JSON.stringify(event.body)}` , typeof event.body);
+
+  
   const response = {
     statusCode: 200,
     body: JSON.stringify('Hello from Lambda!'),
