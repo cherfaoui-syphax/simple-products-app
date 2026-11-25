@@ -1,13 +1,33 @@
 version: 0.2
 
 env:
+  shell: bash
   variables:
-    LAMBDA_NAME: products
+    BASE_LAMBDA_NAME: products
 
 phases:
   install:
     runtime-versions:
       nodejs: 22
+
+  pre_build:
+    commands:
+      - |
+        BRANCH="${CODEBUILD_WEBHOOK_HEAD_REF#refs/heads/}"
+
+        if [[ "$BRANCH" == "main" ]]; then
+          LAMBDA_NAME="$BASE_LAMBDA_NAME"
+        elif [[ "$BRANCH" =~ ^dev-[a-z0-9-]+$ ]]; then
+          LAMBDA_NAME="${BASE_LAMBDA_NAME}-${BRANCH}"
+        else
+          echo "Unsupported or missing branch"
+          exit 1
+        fi
+
+        export LAMBDA_NAME
+
+        echo "Branch: $BRANCH"
+        echo "Target Lambda: $LAMBDA_NAME"
 
   build:
     commands:
@@ -21,12 +41,12 @@ phases:
         if [ "$CODEBUILD_BUILD_SUCCEEDING" != "1" ]; then
           exit 1
         fi
-      - |
+
         aws lambda update-function-code \
           --function-name "$LAMBDA_NAME" \
           --zip-file fileb:///tmp/function.zip \
           --region eu-north-1
-      - |
+
         aws lambda wait function-updated \
           --function-name "$LAMBDA_NAME" \
           --region eu-north-1
