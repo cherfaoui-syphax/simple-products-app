@@ -327,6 +327,11 @@ export const handler = async (event, context) => {
           await getProduct(id)
         );
 
+      case "PATCH /products/{id}":
+        return jsonResponse(
+          await updateProduct(id, parseBody(event))
+        );
+
       case "POST /products":
         return jsonResponse(
           await createProduct(parseBody(event)),
